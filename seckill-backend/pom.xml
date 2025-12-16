@@ -11,6 +11,7 @@
     <modules>
         <module>seckill-common</module>
         <module>seckill-user</module>
+        <module>seckill-product</module>
     </modules>
 
     <!-- 统一依赖版本 -->

@@ -1,47 +1,49 @@
 server:
-  port: 8081
+  port: 8082
   servlet:
     context-path: /api
 
 spring:
-  # 数据库配置
+  # ?????
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/seckill_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
-  # Redis配置（预留）
+
+  # Redis??????
   redis:
     host: localhost
     port: 6379
     password:
     database: 0
-  # 关键：恢复ant-path-matcher，适配SpringFox
+
+  # ?????ant-path-matcher???SpringFox/Knife4j
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
 
-# MyBatisPlus配置
+# MyBatisPlus??
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: com.seckill.user.entity
+  type-aliases-package: com.seckill.product.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-# JWT配置
+# JWT??
 jwt:
   secret: seckill-system-2025-secret-key-123456
   expire: 7200000
 
-# Knife4j接口文档（兼容配置）
+# Knife4j??????????
 knife4j:
   enable: true
   setting:
     language: zh-CN
   openapi:
-    title: 秒杀系统-用户模块接口文档
+    title: ????-????????
     version: 1.0.0
-    description: 用户注册、登录、权限管理接口
-    base-package: com.seckill.user.controller # 显式指定扫描包
-    path-selector: /** # 路径匹配规则
+    description: ?????????
+    base-package: com.seckill.product.controller
+    path-selector: /**
