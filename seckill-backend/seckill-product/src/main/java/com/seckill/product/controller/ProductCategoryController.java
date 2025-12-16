@@ -37,7 +37,7 @@ public class ProductCategoryController {
             dataType = "String",
             example = "Bearer eyJhbGciOiJIUzI1NiJ9..."
     )
-    public ResultVO<Void> addCategory(@RequestBody ProductCategory category, HttpServletRequest request) {
+    public ResultVO<Long> addCategory(@RequestBody ProductCategory category, HttpServletRequest request) {
         Integer role = (Integer) request.getAttribute("role");
         if (!RoleEnum.ADMIN.getCode().equals(role)) {
             throw BusinessException.forbidden();
@@ -47,14 +47,14 @@ public class ProductCategoryController {
         if (!ok) {
             throw BusinessException.badRequest("新增分类失败");
         }
-        return ResultVO.success();
+        return ResultVO.success(category.getId());
     }
 
     @GetMapping("/list")
-    @ApiOperation("查询分类列表（匿名访问）")
+    @ApiOperation("查询分类列表（匿名访问；不传parentId默认查一级分类）")
     @ApiOperationSupport(author = "乙")
     public ResultVO<List<ProductCategoryVO>> listCategories(
-            @ApiParam("父分类ID（不传表示查询全部）")
+            @ApiParam("父分类ID（不传默认查一级分类：parentId=0）")
             @RequestParam(required = false) Long parentId
     ) {
         List<ProductCategory> list = productCategoryService.listCategories(parentId);

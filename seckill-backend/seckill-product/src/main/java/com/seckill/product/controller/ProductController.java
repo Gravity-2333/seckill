@@ -1,5 +1,6 @@
 package com.seckill.product.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
@@ -39,7 +40,7 @@ public class ProductController {
             dataType = "String",
             example = "Bearer eyJhbGciOiJIUzI1NiJ9..."
     )
-    public ResultVO<Void> addProduct(@RequestBody Product product, HttpServletRequest request) {
+    public ResultVO<Long> addProduct(@RequestBody Product product, HttpServletRequest request) {
         Integer role = (Integer) request.getAttribute("role");
         if (!RoleEnum.ADMIN.getCode().equals(role)) {
             throw BusinessException.forbidden();
@@ -49,7 +50,7 @@ public class ProductController {
         if (!ok) {
             throw BusinessException.badRequest("新增商品失败");
         }
-        return ResultVO.success();
+        return ResultVO.success(product.getId());
     }
 
     @PutMapping
@@ -72,6 +73,50 @@ public class ProductController {
         boolean ok = productService.updateProduct(product);
         if (!ok) {
             throw BusinessException.badRequest("修改商品失败");
+        }
+        return ResultVO.success();
+    }
+
+    @PutMapping("/status/{id}")
+    @ApiOperation("商品上下架（仅管理员）")
+    @ApiOperationSupport(author = "乙")
+    @ApiImplicitParam(
+            name = "Authorization",
+            value = "JWT Token（格式：Bearer + 空格 + token）",
+            required = true,
+            paramType = "header",
+            dataType = "String",
+            example = "Bearer eyJhbGciOiJIUzI1NiJ9..."
+    )
+    public ResultVO<Void> updateProductStatus(
+            @ApiParam("商品ID") @PathVariable Long id,
+            @ApiParam(value = "状态：1-上架/0-下架", required = true) @RequestParam Integer status,
+            HttpServletRequest request
+    ) {
+        Integer role = (Integer) request.getAttribute("role");
+        if (!RoleEnum.ADMIN.getCode().equals(role)) {
+            throw BusinessException.forbidden();
+        }
+
+        if (id == null) {
+            throw BusinessException.badRequest("商品ID不能为空");
+        }
+        if (status == null || (status != 0 && status != 1)) {
+            throw BusinessException.badRequest("状态参数不合法");
+        }
+
+        Product exist = productService.getById(id);
+        if (exist == null) {
+            throw BusinessException.badRequest("商品不存在");
+        }
+
+        Product update = new Product();
+        update.setId(id);
+        update.setStatus(status);
+
+        boolean ok = productService.updateById(update);
+        if (!ok) {
+            throw BusinessException.badRequest("上下架失败");
         }
         return ResultVO.success();
     }
@@ -100,19 +145,68 @@ public class ProductController {
         return ResultVO.success();
     }
 
+    @GetMapping("/detail/{id}")
+    @ApiOperation("商品详情（匿名访问）")
+    @ApiOperationSupport(author = "乙")
+    public ResultVO<ProductVO> getProductDetail(@ApiParam("商品ID") @PathVariable Long id) {
+        if (id == null) {
+            throw BusinessException.badRequest("商品ID不能为空");
+        }
+
+        Product p = productService.getById(id);
+        if (p == null) {
+            throw BusinessException.badRequest("商品不存在");
+        }
+        // 只允许查看上架商品
+        if (p.getStatus() == null || p.getStatus() != 1) {
+            throw BusinessException.badRequest("商品已下架");
+        }
+
+        ProductVO vo = new ProductVO();
+        vo.setId(p.getId());
+        vo.setProductName(p.getProductName());
+        vo.setProductDesc(p.getProductDesc());
+        vo.setPrice(p.getPrice());
+        vo.setStock(p.getStock());
+        vo.setCategoryId(p.getCategoryId());
+        vo.setImgUrl(p.getImgUrl());
+
+        return ResultVO.success(vo);
+    }
+
     @GetMapping("/list")
-    @ApiOperation("商品分页列表（匿名访问）")
+    @ApiOperation("商品分页列表（匿名访问；管理员可查看全部/按状态筛选）")
     @ApiOperationSupport(author = "乙")
     public ResultVO<IPage<ProductVO>> listProducts(
             @ApiParam(value = "页码（从1开始）", required = true) @RequestParam(defaultValue = "1") Integer page,
             @ApiParam(value = "每页条数", required = true) @RequestParam(defaultValue = "10") Integer size,
-            @ApiParam("分类ID（可选）") @RequestParam(required = false) Long categoryId
+            @ApiParam("分类ID（可选）") @RequestParam(required = false) Long categoryId,
+            @ApiParam("状态：1-上架/0-下架（仅管理员可用，不传表示查看全部）") @RequestParam(required = false) Integer status,
+            HttpServletRequest request
     ) {
         if (page == null || page < 1 || size == null || size < 1) {
             throw BusinessException.badRequest("分页参数不合法");
         }
 
-        IPage<Product> productPage = productService.listProducts(page, size, categoryId);
+        Integer role = (Integer) request.getAttribute("role");
+        boolean isAdmin = RoleEnum.ADMIN.getCode().equals(role);
+
+        IPage<Product> productPage;
+
+        if (!isAdmin) {
+            productPage = productService.listProducts(page, size, categoryId);
+        } else {
+            Page<Product> pageParam = new Page<>(page, size);
+            LambdaQueryWrapper<Product> qw = new LambdaQueryWrapper<>();
+            if (categoryId != null) {
+                qw.eq(Product::getCategoryId, categoryId);
+            }
+            if (status != null) {
+                qw.eq(Product::getStatus, status);
+            }
+            qw.orderByDesc(Product::getId);
+            productPage = productService.page(pageParam, qw);
+        }
 
         List<ProductVO> voList = productPage.getRecords().stream().map(p -> {
             ProductVO vo = new ProductVO();

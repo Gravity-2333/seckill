@@ -22,7 +22,13 @@ public class ProductCategoryServiceImpl
         if (category == null) {
             return false;
         }
-        // 填充创建时间（按你们实体里提供的 setCreateTime() 风格）
+        if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
+            return false;
+        }
+        if (category.getParentId() == null) {
+            category.setParentId(0L);
+        }
+
         category.setCreateTime();
         return this.save(category);
     }
@@ -30,9 +36,14 @@ public class ProductCategoryServiceImpl
     @Override
     public List<ProductCategory> listCategories(Long parentId) {
         LambdaQueryWrapper<ProductCategory> qw = new LambdaQueryWrapper<>();
-        if (parentId != null) {
+
+        // 不传 parentId：默认查一级分类
+        if (parentId == null) {
+            qw.eq(ProductCategory::getParentId, 0L);
+        } else {
             qw.eq(ProductCategory::getParentId, parentId);
         }
+
         qw.orderByDesc(ProductCategory::getId);
         return this.list(qw);
     }

@@ -4,6 +4,9 @@ server:
     context-path: /api
 
 spring:
+  application:
+    name: seckill-product
+
   # ?????
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -25,7 +28,7 @@ spring:
 
 # MyBatisPlus??
 mybatis-plus:
-  mapper-locations: classpath:mapper/**/*.xml
+  mapper-locations: classpath*:/mapper/**/*.xml
   type-aliases-package: com.seckill.product.entity
   configuration:
     map-underscore-to-camel-case: true

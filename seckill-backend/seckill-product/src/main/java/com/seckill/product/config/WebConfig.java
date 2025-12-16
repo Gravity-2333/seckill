@@ -23,6 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
                 // 匿名接口（所有用户可访问）
                 .excludePathPatterns(
                         "/product/list",
+                        "/product/detail/**",
                         "/product/category/list"
                 );
     }
