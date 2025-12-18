@@ -16,8 +16,9 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 分页查询用户列表（管理员）- 注解SQL
      */
-    @Select("SELECT id, username, phone, email, role, create_time AS createTime FROM t_user " +
-            "WHERE username LIKE CONCAT('%', #{username}, '%')")
+    @Select("SELECT id, username, phone, email, role, create_time AS createTime " +
+            "FROM t_user " +
+            "WHERE (#{username} IS NULL OR #{username} = '' OR username LIKE CONCAT('%', #{username}, '%'))")
     IPage<UserVO> selectUserPage(Page<UserVO> page, @Param("username") String username);
 
     /**

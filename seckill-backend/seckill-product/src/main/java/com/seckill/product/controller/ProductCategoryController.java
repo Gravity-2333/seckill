@@ -3,10 +3,12 @@ package com.seckill.product.controller;
 import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import com.seckill.common.constant.RoleEnum;
 import com.seckill.common.exception.BusinessException;
+import com.seckill.common.utils.MinioUtil;
 import com.seckill.common.vo.ResultVO;
 import com.seckill.product.entity.ProductCategory;
 import com.seckill.product.service.ProductCategoryService;
 import com.seckill.product.vo.ProductCategoryVO;
+import io.minio.MinioClient;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +44,8 @@ public class ProductCategoryController {
         if (!RoleEnum.ADMIN.getCode().equals(role)) {
             throw BusinessException.forbidden();
         }
+
+
 
         boolean ok = productCategoryService.addCategory(category);
         if (!ok) {

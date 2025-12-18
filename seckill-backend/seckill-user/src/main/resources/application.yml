@@ -45,3 +45,9 @@ knife4j:
     description: 用户注册、登录、权限管理接口
     base-package: com.seckill.user.controller # 显式指定扫描包
     path-selector: /** # 路径匹配规则
+
+minio:
+  endpoint: http://127.0.0.1:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: seckill

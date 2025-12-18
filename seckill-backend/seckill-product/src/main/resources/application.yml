@@ -50,3 +50,9 @@ knife4j:
     description: ?????????
     base-package: com.seckill.product.controller
     path-selector: /**
+
+minio:
+  endpoint: http://127.0.0.1:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: seckill
